@@ -4,6 +4,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { ItemsModule } from './items/items.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
       playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
     }),
+    ItemsModule,
   ],
   controllers: [],
   providers: [],
