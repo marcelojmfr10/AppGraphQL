@@ -2,27 +2,37 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { LoginInput, SignUpInput } from './dto/inputs';
 import { AuthResponse } from './types/auth-response.type';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
+import { ValidRoles } from './enums/valid-roles.enum';
 
-@Resolver()
+@Resolver(() => AuthResolver)
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
-  @Mutation(() => AuthResponse, {name: 'signup'})
+  @Mutation(() => AuthResponse, { name: 'signup' })
   async signUp(
     @Args('signupInput') signupInput: SignUpInput
   ): Promise<AuthResponse> {
     return await this.authService.signUp(signupInput);
   }
 
-  @Mutation(() => AuthResponse, {name: 'login'})
+  @Mutation(() => AuthResponse, { name: 'login' })
   async login(
     @Args('loginInput') loginInput: LoginInput
   ): Promise<AuthResponse> {
     return await this.authService.login(loginInput);
   }
 
-  // @Query(,{name: 'revalite'})
-  // async revalidateToken(){
-  //   return this.authService.revalidateToken();
-  // }
+  @Query(() => AuthResponse, { name: 'revalite' })
+  // @UseGuards(AuthGuard())
+  @UseGuards(JwtAuthGuard)
+  revalidateToken(
+    @CurrentUser(/**[ValidRoles.admin]*/) user: User
+  ): AuthResponse {
+    return this.authService.revalidateToken(user);
+  }
 }
