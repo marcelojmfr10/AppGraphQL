@@ -36,7 +36,8 @@ export class User {
   @Field(() => Boolean)
   isActive: boolean;
 
-  @ManyToOne(() => User, (user) => user.lastUpdateBy, { nullable: true })
+  // aquí no funciona eager, porque apunta a la misma tabla
+  @ManyToOne(() => User, (user) => user.lastUpdateBy, { nullable: true, lazy: true })
   @JoinColumn({name: 'lastUpdateBy'})
   @Field(() => User, { nullable: true })
   lastUpdateBy?: User;
