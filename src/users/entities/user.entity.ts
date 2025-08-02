@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int, ID } from '@nestjs/graphql';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Item } from './../../items/entities/item.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'users' })
 @ObjectType()
@@ -38,8 +39,11 @@ export class User {
 
   // aquí no funciona eager, porque apunta a la misma tabla
   @ManyToOne(() => User, (user) => user.lastUpdateBy, { nullable: true, lazy: true })
-  @JoinColumn({name: 'lastUpdateBy'})
+  @JoinColumn({ name: 'lastUpdateBy' })
   @Field(() => User, { nullable: true })
   lastUpdateBy?: User;
 
+  @OneToMany(() => Item, (item) => item.user, { lazy: true })
+  @Field(() => [Item])
+  items: Item[];
 }
