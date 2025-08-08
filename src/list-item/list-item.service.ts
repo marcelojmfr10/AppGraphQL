@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateListItemInput } from './dto/create-list-item.input';
 import { UpdateListItemInput } from './dto/update-list-item.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ListItem } from './entities/list-item.entity';
 import { Repository } from 'typeorm';
+import { List } from 'src/lists/entities/list.entity';
+import { PaginationArgs, SearchArgs } from 'src/common/dto/args';
 
 @Injectable()
 export class ListItemService {
@@ -20,19 +22,66 @@ export class ListItemService {
       item: { id: itemId },
       list: { id: listId }
     });
-    return this.listItemsRepository.save(newListItem);
+
+    await this.listItemsRepository.save(newListItem);
+
+    return this.findOne(newListItem.id);
   }
 
-  async findAll(): Promise<ListItem[]> {
-    return this.listItemsRepository.find();
+  async findAll(list: List, paginationArgs: PaginationArgs, searchArgs: SearchArgs): Promise<ListItem[]> {
+    const { limit, offset } = paginationArgs;
+    const { search } = searchArgs;
+
+    const queryBuilder = this.listItemsRepository.createQueryBuilder()
+      .take(limit)
+      .skip(offset)
+      .where(`"listId" = :listId`, { listId: list.id });
+
+    if (search) {
+      queryBuilder.andWhere(`list.name ILIKE :name`, { name: `%${search}%` });
+      // queryBuilder.andWhere(`LOWER(list.name) LIKE :name`, { name: `%${search.toLowerCase()}%` });
+    }
+
+    return queryBuilder.getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} listItem`;
+  async countListItemByList(list: List): Promise<number> {
+    return this.listItemsRepository.countBy({ list: { id: list.id } })
   }
 
-  update(id: number, updateListItemInput: UpdateListItemInput) {
-    return `This action updates a #${id} listItem`;
+  async findOne(id: string): Promise<ListItem> {
+    const listItem = await this.listItemsRepository.findOneBy({ id });
+
+    if (!listItem) throw new NotFoundException(`List item with id ${id} not found`);
+
+    return listItem;
+  }
+
+  async update(id: string, updateListItemInput: UpdateListItemInput): Promise<ListItem> {
+    const { listId, itemId, ...rest } = updateListItemInput;
+
+    const queryBuilder = this.listItemsRepository.createQueryBuilder()
+      .update()
+      .set(rest)
+      .where(`id = :id`, { id });
+
+    if (listId) queryBuilder.set({ list: { id: listId } });
+    if (itemId) queryBuilder.set({ item: { id: itemId } });
+
+    await queryBuilder.execute();
+
+    return this.findOne(id);
+
+    // no funcionó al actualizar el listId
+    // const listItem = await this.listItemsRepository.preload({
+    //   ...rest,
+    //   list: {id: listId},
+    //   item: {id: itemId}
+    // });
+
+    // if(!listItem) throw new NotFoundException(`List item with id ${id} not found`);
+
+    // return this.listItemsRepository.save(listItem);
   }
 
   remove(id: number) {

@@ -3,7 +3,7 @@ export const SEED_USERS = [
         fullName: 'Marcelo Fuentes',
         email: 'marcelo@google.com',
         password: '123456',
-        roles: ['admin','superUser','user'],
+        roles: ['admin', 'superUser', 'user'],
         isActive: true
     },
     {
@@ -20,6 +20,12 @@ export const SEED_USERS = [
         roles: ['user'],
         isActive: false
     },
+]
+
+export const SEED_LISTS = [
+    { name: 'supermercado' },
+    { name: 'diario' },
+    { name: 'fin de semana' },
 ]
 
 export const SEED_ITEMS = [

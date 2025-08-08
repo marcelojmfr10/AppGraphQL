@@ -16,7 +16,7 @@ import { ListItemService } from 'src/list-item/list-item.service';
 export class ListsResolver {
 
   constructor(
-    private readonly listsService: ListsService, 
+    private readonly listsService: ListsService,
     private readonly listItemService: ListItemService
   ) { }
 
@@ -53,10 +53,19 @@ export class ListsResolver {
     return this.listsService.remove(id, user);
   }
 
-  @ResolveField(() => [ListItem], {name: 'items'})
+  @ResolveField(() => [ListItem], { name: 'items' })
   async getListItems(
     @Parent() list: List,
+    @Args() paginationArgs: PaginationArgs,
+    @Args() searchArgs: SearchArgs
   ): Promise<ListItem[]> {
-    return this.listItemService.findAll();
+    return this.listItemService.findAll(list, paginationArgs, searchArgs);
+  }
+
+  @ResolveField(() => Number, { name: 'totalItems' })
+  async countListItemsbyList(
+    @Parent() list: List,
+  ): Promise<number> {
+    return this.listItemService.countListItemByList(list);
   }
 }
