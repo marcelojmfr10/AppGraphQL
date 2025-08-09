@@ -38,7 +38,7 @@ export class ListItemService {
       .where(`"listId" = :listId`, { listId: list.id });
 
     if (search) {
-      queryBuilder.andWhere(`list.name ILIKE :name`, { name: `%${search}%` });
+      queryBuilder.andWhere(`item.name ILIKE :name`, { name: `%${search}%` });
       // queryBuilder.andWhere(`LOWER(list.name) LIKE :name`, { name: `%${search.toLowerCase()}%` });
     }
 
