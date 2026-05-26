@@ -19,11 +19,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         secret: configService.get('JWT_SECRET'),
         signOptions: {
           expiresIn: '2h',
-        }
-      })
+        },
+      }),
     }),
     UsersModule,
   ],
-  exports: [JwtStrategy, PassportModule, JwtModule]
+  exports: [JwtStrategy, PassportModule, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

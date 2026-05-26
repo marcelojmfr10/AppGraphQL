@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
@@ -11,38 +17,40 @@ import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 
 @Injectable()
 export class UsersService {
-
   private logger = new Logger('UsersService');
 
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>
-  ) { }
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
   async create(signupInput: SignUpInput): Promise<User> {
     try {
       const newUser = this.usersRepository.create({
         ...signupInput,
-        password: bcrypt.hashSync(signupInput.password, 10)
+        password: bcrypt.hashSync(signupInput.password, 10),
       });
 
       return await this.usersRepository.save(newUser);
-
     } catch (error) {
       this.handleDBErrors(error);
     }
   }
 
   async findAll(roles: ValidRoles[]): Promise<User[]> {
-    if (roles.length === 0) return this.usersRepository.find({
-      // no es necesario porque tenemos lazy la propiedad
-      // relations: {
-      //   lastUpdateBy: true
-      // }
-    });
+    if (roles.length === 0)
+      return this.usersRepository.find({
+        // no es necesario porque tenemos lazy la propiedad
+        // relations: {
+        //   lastUpdateBy: true
+        // }
+      });
 
-    return this.usersRepository.createQueryBuilder()
-      .andWhere('ARRAY[roles] && ARRAY[:...roles]').setParameter('roles', roles).getMany();
+    return this.usersRepository
+      .createQueryBuilder()
+      .andWhere('ARRAY[roles] && ARRAY[:...roles]')
+      .setParameter('roles', roles)
+      .getMany();
   }
 
   async findOneByEmail(email: string): Promise<User> {
@@ -52,7 +60,7 @@ export class UsersService {
       throw new NotFoundException(`${email} not found`);
       this.handleDBErrors({
         code: 'error-001',
-        detail: `${email} not found`
+        detail: `${email} not found`,
       });
     }
   }
@@ -65,17 +73,22 @@ export class UsersService {
     }
   }
 
-  async update(id: string, updateUserInput: UpdateUserInput, updateBy: User): Promise<User> {
+  async update(
+    id: string,
+    updateUserInput: UpdateUserInput,
+    updateBy: User,
+  ): Promise<User> {
     try {
+      const user = await this.usersRepository.preload({
+        ...updateUserInput,
+        id,
+      });
 
-      const user = await this.usersRepository.preload({...updateUserInput, id});
+      if (!user) throw new NotFoundException('User not found');
 
-      if(!user) throw new NotFoundException('User not found');
-      
       user.lastUpdateBy = updateBy;
 
       return await this.usersRepository.save(user);
-      
     } catch (error) {
       this.handleDBErrors(error);
     }

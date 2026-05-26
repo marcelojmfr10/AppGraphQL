@@ -14,110 +14,124 @@ import { ListItemService } from 'src/list-item/list-item.service';
 
 @Injectable()
 export class SeedService {
+  private isProd: boolean;
 
-    private isProd: boolean;
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(Item)
+    private readonly itemsRepository: Repository<Item>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    @InjectRepository(ListItem)
+    private readonly listItemsRepository: Repository<ListItem>,
+    @InjectRepository(List)
+    private readonly listRepository: Repository<List>,
+    private readonly usersService: UsersService,
+    private readonly itemsService: ItemsService,
+    private readonly listService: ListsService,
+    private readonly listItemService: ListItemService,
+  ) {
+    this.isProd = configService.get('STATE') === 'prod';
+  }
 
-    constructor(
-        private readonly configService: ConfigService,
-        @InjectRepository(Item)
-        private readonly itemsRepository: Repository<Item>,
-        @InjectRepository(User)
-        private readonly usersRepository: Repository<User>,
-        @InjectRepository(ListItem)
-        private readonly listItemsRepository: Repository<ListItem>,
-        @InjectRepository(List)
-        private readonly listRepository: Repository<List>,
-        private readonly usersService: UsersService,
-        private readonly itemsService: ItemsService,
-        private readonly listService: ListsService,
-        private readonly listItemService: ListItemService
-    ) {
-        this.isProd = configService.get('STATE') === 'prod';
+  async executeSeed() {
+    if (this.isProd) {
+      throw new UnauthorizedException('We cannot run SEED on Prod');
     }
 
-    async executeSeed() {
-        if (this.isProd) {
-            throw new UnauthorizedException('We cannot run SEED on Prod');
-        }
+    // limpiar la base de datos
+    await this.deleteDatabase();
 
-        // limpiar la base de datos
-        await this.deleteDatabase();
+    // crear usuarios
+    const user = await this.loadUsers();
 
-        // crear usuarios
-        const user = await this.loadUsers();
+    // crear items
+    await this.loadItems(user);
 
-        // crear items
-        await this.loadItems(user);
+    // crear lists
+    const list = await this.loadLists(user);
 
-        // crear lists
-        const list = await this.loadLists(user);
+    // crear list items
+    const items = await this.itemsService.findAll(
+      user[0],
+      { limit: 15, offset: 0 },
+      {},
+    );
+    await this.loadListItems(list, items);
 
-        // crear list items
-        const items = await this.itemsService.findAll(user[0], {limit: 15, offset: 0}, {});
-        await this.loadListItems(list, items);
+    return true;
+  }
 
-        return true;
+  async deleteDatabase() {
+    // borrar list items
+    await this.listItemsRepository
+      .createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+
+    // borrar lists
+    await this.listRepository.createQueryBuilder().delete().where({}).execute();
+
+    // borrar items
+    await this.itemsRepository
+      .createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+
+    // borrar usuarios
+    await this.usersRepository
+      .createQueryBuilder()
+      .delete()
+      .where({})
+      .execute();
+  }
+
+  async loadUsers(): Promise<User[]> {
+    const users: User[] = [];
+
+    for (const user of SEED_USERS) {
+      users.push(await this.usersService.create(user));
     }
 
-    async deleteDatabase() {
-        // borrar list items
-        await this.listItemsRepository.createQueryBuilder().delete().where({}).execute();
+    return users;
+  }
 
-        // borrar lists
-        await this.listRepository.createQueryBuilder().delete().where({}).execute();
+  async loadItems(users: User[]): Promise<void> {
+    const itemsPromises: Promise<Item>[] = [];
 
-        // borrar items
-        await this.itemsRepository.createQueryBuilder().delete().where({}).execute();
-
-        // borrar usuarios
-        await this.usersRepository.createQueryBuilder().delete().where({}).execute();
+    for (const item of SEED_ITEMS) {
+      const randomIndex = Math.floor(Math.random() * users.length);
+      const user = users[randomIndex];
+      itemsPromises.push(this.itemsService.create(item, user));
     }
 
-    async loadUsers(): Promise<User[]> {
-        const users: User[] = [];
+    await Promise.all(itemsPromises);
+  }
 
-        for (const user of SEED_USERS) {
-            users.push(await this.usersService.create(user))
-        }
+  async loadLists(users: User[]): Promise<List> {
+    const itemsPromises: Promise<List>[] = [];
 
-        return users;
+    for (const item of SEED_LISTS) {
+      const randomIndex = Math.floor(Math.random() * users.length);
+      const user = users[randomIndex];
+      itemsPromises.push(this.listService.create(item, user));
     }
 
-    async loadItems(users: User[]): Promise<void> {
-        const itemsPromises: Promise<Item>[] = [];
+    await Promise.all(itemsPromises);
 
-        for (const item of SEED_ITEMS) {
-            const randomIndex = Math.floor(Math.random() * users.length);
-            const user = users[randomIndex];
-            itemsPromises.push(this.itemsService.create(item, user));
-        }
+    return itemsPromises[0];
+  }
 
-        await Promise.all(itemsPromises);
+  async loadListItems(list: List, items: Item[]) {
+    for (const item of items) {
+      this.listItemService.create({
+        quantity: Math.round(Math.random() * 10),
+        completed: Math.round(Math.random()) === 1,
+        listId: list.id,
+        itemId: item.id,
+      });
     }
-
-    async loadLists(users: User[]): Promise<List> {
-        const itemsPromises: Promise<List>[] = [];
-
-        for (const item of SEED_LISTS) {
-            const randomIndex = Math.floor(Math.random() * users.length);
-            const user = users[randomIndex];
-            itemsPromises.push(this.listService.create(item, user));
-        }
-
-        await Promise.all(itemsPromises);
-
-        return itemsPromises[0];
-    }
-
-    async loadListItems(list: List, items: Item[]) {
-        for (const item of items) {
-            this.listItemService.create({
-                quantity: Math.round(Math.random() * 10),
-                completed: Math.round(Math.random()) === 1,
-                listId: list.id,
-                itemId: item.id
-            });
-        }
-    }
-
+  }
 }

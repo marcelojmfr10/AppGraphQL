@@ -5,7 +5,6 @@ import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 
 @InputType()
 export class UpdateUserInput extends PartialType(CreateUserInput) {
-
   @Field(() => ID)
   @IsUUID()
   id: string;

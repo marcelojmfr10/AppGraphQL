@@ -9,12 +9,11 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 @Resolver(() => ListItem)
 @UseGuards(JwtAuthGuard)
 export class ListItemResolver {
-
   constructor(private readonly listItemService: ListItemService) {}
 
   @Mutation(() => ListItem)
   createListItem(
-    @Args('createListItemInput') createListItemInput: CreateListItemInput
+    @Args('createListItemInput') createListItemInput: CreateListItemInput,
   ): Promise<ListItem> {
     return this.listItemService.create(createListItemInput);
   }
@@ -25,14 +24,20 @@ export class ListItemResolver {
   // }
 
   @Query(() => ListItem, { name: 'listItem' })
-  async findOne(@Args('id', { type: () => String }, ParseUUIDPipe) id: string): Promise<ListItem> {
+  async findOne(
+    @Args('id', { type: () => String }, ParseUUIDPipe) id: string,
+  ): Promise<ListItem> {
     return this.listItemService.findOne(id);
   }
 
   @Mutation(() => ListItem)
   async updateListItem(
-    @Args('updateListItemInput') updateListItemInput: UpdateListItemInput): Promise<ListItem> {
-    return this.listItemService.update(updateListItemInput.id, updateListItemInput);
+    @Args('updateListItemInput') updateListItemInput: UpdateListItemInput,
+  ): Promise<ListItem> {
+    return this.listItemService.update(
+      updateListItemInput.id,
+      updateListItemInput,
+    );
   }
 
   // @Mutation(() => ListItem)

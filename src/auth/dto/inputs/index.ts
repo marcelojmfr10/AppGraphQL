@@ -1,2 +1,2 @@
-export { LoginInput } from "./login.input";
-export { SignUpInput } from "./signup.input";
+export { LoginInput } from './login.input';
+export { SignUpInput } from './signup.input';

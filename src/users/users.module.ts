@@ -8,14 +8,7 @@ import { ListsModule } from 'src/lists/lists.module';
 
 @Module({
   providers: [UsersResolver, UsersService],
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    ItemsModule,
-    ListsModule
-  ],
-  exports: [
-    TypeOrmModule,
-    UsersService
-  ]
+  imports: [TypeOrmModule.forFeature([User]), ItemsModule, ListsModule],
+  exports: [TypeOrmModule, UsersService],
 })
 export class UsersModule {}

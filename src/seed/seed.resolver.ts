@@ -5,7 +5,10 @@ import { SeedService } from './seed.service';
 export class SeedResolver {
   constructor(private readonly seedService: SeedService) {}
 
-  @Mutation(() => Boolean, {name: 'executeSeed', description: 'Ejecuta la construcción de la base de datos'})
+  @Mutation(() => Boolean, {
+    name: 'executeSeed',
+    description: 'Ejecuta la construcción de la base de datos',
+  })
   async executeSeed(): Promise<Boolean> {
     return this.seedService.executeSeed();
   }

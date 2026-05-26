@@ -11,18 +11,18 @@ import { ValidRoles } from './enums/valid-roles.enum';
 
 @Resolver(() => AuthResolver)
 export class AuthResolver {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Mutation(() => AuthResponse, { name: 'signup' })
   async signUp(
-    @Args('signupInput') signupInput: SignUpInput
+    @Args('signupInput') signupInput: SignUpInput,
   ): Promise<AuthResponse> {
     return await this.authService.signUp(signupInput);
   }
 
   @Mutation(() => AuthResponse, { name: 'login' })
   async login(
-    @Args('loginInput') loginInput: LoginInput
+    @Args('loginInput') loginInput: LoginInput,
   ): Promise<AuthResponse> {
     return await this.authService.login(loginInput);
   }
@@ -31,7 +31,7 @@ export class AuthResolver {
   // @UseGuards(AuthGuard())
   @UseGuards(JwtAuthGuard)
   revalidateToken(
-    @CurrentUser(/**[ValidRoles.admin]*/) user: User
+    @CurrentUser(/**[ValidRoles.admin]*/) user: User,
   ): AuthResponse {
     return this.authService.revalidateToken(user);
   }

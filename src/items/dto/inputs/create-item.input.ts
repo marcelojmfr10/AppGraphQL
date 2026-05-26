@@ -3,7 +3,6 @@ import { IsNotEmpty, IsOptional, IsPositive, IsString } from 'class-validator';
 
 @InputType()
 export class CreateItemInput {
-
   @Field(() => String)
   @IsNotEmpty()
   @IsString()
@@ -13,9 +12,8 @@ export class CreateItemInput {
   // @IsPositive()
   // quantity: number;
 
-  @Field(() => String, {nullable: true})
+  @Field(() => String, { nullable: true })
   @IsString()
   @IsOptional()
   quantityUnits?: string;
-
 }

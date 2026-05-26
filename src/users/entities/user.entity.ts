@@ -1,12 +1,18 @@
 import { ObjectType, Field, Int, ID } from '@nestjs/graphql';
 import { Item } from './../../items/entities/item.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { List } from 'src/lists/entities/list.entity';
 
 @Entity({ name: 'users' })
 @ObjectType()
 export class User {
-
   @PrimaryGeneratedColumn('uuid')
   @Field(() => ID)
   id: string;
@@ -26,20 +32,23 @@ export class User {
   @Column({
     type: 'text',
     array: true,
-    default: ['user']
+    default: ['user'],
   })
   @Field(() => [String])
   roles: string[];
 
   @Column({
     type: 'boolean',
-    default: true
+    default: true,
   })
   @Field(() => Boolean)
   isActive: boolean;
 
   // aquí no funciona eager, porque apunta a la misma tabla
-  @ManyToOne(() => User, (user) => user.lastUpdateBy, { nullable: true, lazy: true })
+  @ManyToOne(() => User, (user) => user.lastUpdateBy, {
+    nullable: true,
+    lazy: true,
+  })
   @JoinColumn({ name: 'lastUpdateBy' })
   @Field(() => User, { nullable: true })
   lastUpdateBy?: User;
